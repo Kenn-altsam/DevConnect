@@ -141,7 +141,7 @@ function getContactMessages(lang) {
       success: 'Your request has been sent successfully.',
       invalid: 'Please fill in all fields correctly.',
       error: 'Unable to send your request right now.',
-      networkError: 'Unable to reach the server right now. Make sure the backend is running on localhost:3000.',
+      networkError: 'Unable to reach the server right now.',
       fullNameRequired: 'Please enter your full name.',
       emailRequired: 'Please enter your email.',
       topicRequired: 'Please choose a topic.',
@@ -152,7 +152,7 @@ function getContactMessages(lang) {
       success: 'Ваш запрос успешно отправлен.',
       invalid: 'Пожалуйста, корректно заполните все поля.',
       error: 'Сейчас не удалось отправить запрос.',
-      networkError: 'Сервер сейчас недоступен. Убедитесь, что backend запущен на localhost:3000.',
+      networkError: 'Сейчас не удается подключиться к серверу.',
       fullNameRequired: 'Пожалуйста, укажите ваше полное имя.',
       emailRequired: 'Пожалуйста, укажите ваш email.',
       topicRequired: 'Пожалуйста, выберите тему.',
@@ -163,7 +163,7 @@ function getContactMessages(lang) {
       success: 'Сұранысыңыз сәтті жіберілді.',
       invalid: 'Барлық өрісті дұрыс толтырыңыз.',
       error: 'Қазір сұранысты жіберу мүмкін болмады.',
-      networkError: 'Серверге қосылу мүмкін болмады. Backend `localhost:3000` адресінде іске қосылғанын тексеріңіз.',
+      networkError: 'Қазір серверге қосылу мүмкін болмады.',
       fullNameRequired: 'Толық аты-жөніңізді енгізіңіз.',
       emailRequired: 'Email мекенжайыңызды енгізіңіз.',
       topicRequired: 'Тақырыпты таңдаңыз.',
@@ -183,7 +183,7 @@ function getContactApiBases(form) {
 
   function addCandidate(value) {
     const normalized = String(value || '').trim().replace(/\/$/, '');
-    if (!normalized || candidates.includes(normalized)) return;
+    if (!normalized || normalized === 'null' || candidates.includes(normalized)) return;
     candidates.push(normalized);
   }
 
