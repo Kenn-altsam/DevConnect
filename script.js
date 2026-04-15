@@ -134,10 +134,175 @@ function initStats() {
   statsObs.observe(statsBar);
 }
 
+function getContactMessages(lang) {
+  const messages = {
+    en: {
+      sending: 'Sending your request...',
+      success: 'Your request has been sent successfully.',
+      invalid: 'Please fill in all fields correctly.',
+      error: 'Unable to send your request right now.',
+      networkError: 'Unable to reach the server right now. Make sure the backend is running on localhost:3000.',
+      fullNameRequired: 'Please enter your full name.',
+      emailRequired: 'Please enter your email.',
+      topicRequired: 'Please choose a topic.',
+      messageTooShort: 'Message must be at least 10 characters.'
+    },
+    ru: {
+      sending: 'Отправляем ваш запрос...',
+      success: 'Ваш запрос успешно отправлен.',
+      invalid: 'Пожалуйста, корректно заполните все поля.',
+      error: 'Сейчас не удалось отправить запрос.',
+      networkError: 'Сервер сейчас недоступен. Убедитесь, что backend запущен на localhost:3000.',
+      fullNameRequired: 'Пожалуйста, укажите ваше полное имя.',
+      emailRequired: 'Пожалуйста, укажите ваш email.',
+      topicRequired: 'Пожалуйста, выберите тему.',
+      messageTooShort: 'Сообщение должно содержать не менее 10 символов.'
+    },
+    kk: {
+      sending: 'Сұранысыңыз жіберіліп жатыр...',
+      success: 'Сұранысыңыз сәтті жіберілді.',
+      invalid: 'Барлық өрісті дұрыс толтырыңыз.',
+      error: 'Қазір сұранысты жіберу мүмкін болмады.',
+      networkError: 'Серверге қосылу мүмкін болмады. Backend `localhost:3000` адресінде іске қосылғанын тексеріңіз.',
+      fullNameRequired: 'Толық аты-жөніңізді енгізіңіз.',
+      emailRequired: 'Email мекенжайыңызды енгізіңіз.',
+      topicRequired: 'Тақырыпты таңдаңыз.',
+      messageTooShort: 'Хабарлама кемінде 10 таңбадан тұруы керек.'
+    }
+  };
+
+  return messages[lang] || messages.en;
+}
+
+function getContactApiBases(form) {
+  const explicitBase = (form.dataset.apiBase || '').trim().replace(/\/$/, '');
+  if (explicitBase) return [explicitBase];
+
+  const { protocol, hostname, origin } = window.location;
+  const candidates = [];
+
+  function addCandidate(value) {
+    const normalized = String(value || '').trim().replace(/\/$/, '');
+    if (!normalized || candidates.includes(normalized)) return;
+    candidates.push(normalized);
+  }
+
+  if (protocol === 'file:') {
+    addCandidate('http://localhost:3000');
+    addCandidate('http://127.0.0.1:3000');
+    return candidates;
+  }
+
+  addCandidate(origin);
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    addCandidate(`${window.location.protocol}//${hostname}:3000`);
+    addCandidate(hostname === 'localhost' ? 'http://127.0.0.1:3000' : 'http://localhost:3000');
+    return candidates;
+  }
+
+  addCandidate('http://localhost:3000');
+  addCandidate('http://127.0.0.1:3000');
+  return candidates;
+}
+
+function initContactForm() {
+  const form = document.getElementById('contact-form');
+  if (!form) return;
+
+  const feedback = document.getElementById('contact-form-feedback');
+  const submitButton = document.getElementById('contact-form-submit');
+  const apiBases = getContactApiBases(form);
+
+  function setFeedback(type, message) {
+    if (!feedback) return;
+    feedback.textContent = message;
+    feedback.classList.remove('is-success', 'is-error', 'is-loading');
+    if (type) feedback.classList.add(`is-${type}`);
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const messages = getContactMessages(currentLang);
+    const formData = new FormData(form);
+    const payload = {
+      fullName: String(formData.get('fullName') || '').trim(),
+      email: String(formData.get('email') || '').trim(),
+      topic: String(formData.get('topic') || '').trim(),
+      message: String(formData.get('message') || '').trim()
+    };
+
+    if (!payload.fullName) {
+      setFeedback('error', messages.fullNameRequired);
+      return;
+    }
+
+    if (!payload.email) {
+      setFeedback('error', messages.emailRequired);
+      return;
+    }
+
+    if (!payload.topic) {
+      setFeedback('error', messages.topicRequired);
+      return;
+    }
+
+    if (payload.message.length < 10) {
+      setFeedback('error', messages.messageTooShort);
+      return;
+    }
+
+    setFeedback('loading', messages.sending);
+    submitButton.disabled = true;
+
+    try {
+      let response;
+      let networkError = null;
+
+      for (const apiBase of apiBases) {
+        try {
+          response = await fetch(`${apiBase}/api/contact`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept-Language': currentLang
+            },
+            body: JSON.stringify(payload)
+          });
+          networkError = null;
+          break;
+        } catch (error) {
+          networkError = error;
+        }
+      }
+
+      if (!response) {
+        throw networkError || new Error(messages.networkError);
+      }
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.message || messages.error);
+      }
+
+      form.reset();
+      setFeedback('success', messages.success);
+    } catch (error) {
+      const message = error instanceof TypeError ? messages.networkError : (error.message || messages.error);
+      setFeedback('error', message);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initActiveNav();
   initLanguageSwitcher();
   initCursor();
   initReveal();
   initStats();
+  initContactForm();
 });
