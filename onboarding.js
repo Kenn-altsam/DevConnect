@@ -4,6 +4,11 @@ const onboardingState = {
   role: localStorage.getItem('onboardingRole') || 'client'
 };
 
+function normalizeLanguage(lang) {
+  if (lang === 'kz') return 'kk';
+  return ['en', 'ru', 'kk'].includes(lang) ? lang : 'en';
+}
+
 const copy = {
   en: {
     skip: 'Skip',
@@ -257,11 +262,11 @@ function applyCopy() {
 }
 
 function selectLanguage(lang) {
-  onboardingState.lang = lang;
-  localStorage.setItem('language', lang);
+  onboardingState.lang = normalizeLanguage(lang);
+  localStorage.setItem('language', onboardingState.lang);
 
   document.querySelectorAll('.lang-choice').forEach(card => {
-    card.classList.toggle('selected', card.dataset.lang === lang);
+    card.classList.toggle('selected', card.dataset.lang === onboardingState.lang);
   });
 
   applyCopy();
@@ -376,6 +381,8 @@ function initChoices() {
 }
 
 function restoreVisualSelections() {
+  onboardingState.lang = normalizeLanguage(localStorage.getItem('language') || onboardingState.lang);
+
   document.querySelectorAll('.lang-choice').forEach(card => {
     card.classList.toggle('selected', card.dataset.lang === onboardingState.lang);
   });

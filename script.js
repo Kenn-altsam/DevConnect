@@ -1,4 +1,9 @@
-let currentLang = localStorage.getItem('language') || 'en';
+function normalizeLanguage(lang) {
+  if (lang === 'kz') return 'kk';
+  return ['en', 'ru', 'kk'].includes(lang) ? lang : 'en';
+}
+
+let currentLang = normalizeLanguage(localStorage.getItem('language') || 'en');
 
 function updateElementText(el, text) {
   if (!text) return;
@@ -24,18 +29,18 @@ function updateElementText(el, text) {
 }
 
 function setLanguage(lang) {
-  currentLang = lang;
-  localStorage.setItem('language', lang);
+  currentLang = normalizeLanguage(lang);
+  localStorage.setItem('language', currentLang);
   document.querySelectorAll('[data-en], [data-placeholder-en]').forEach(el => {
-    const key = el.dataset.placeholderKey ? `placeholder${lang.charAt(0).toUpperCase()+lang.slice(1)}` : lang;
-    const attr = el.dataset.placeholderKey ? `data-placeholder-${lang}` : `data-${lang}`;
+    const key = el.dataset.placeholderKey ? `placeholder${currentLang.charAt(0).toUpperCase()+currentLang.slice(1)}` : currentLang;
+    const attr = el.dataset.placeholderKey ? `data-placeholder-${currentLang}` : `data-${currentLang}`;
     const text = el.getAttribute(attr);
     updateElementText(el, text);
   });
   document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
   });
-  document.documentElement.lang = lang;
+  document.documentElement.lang = currentLang;
 }
 
 function normalizePath(path) {
