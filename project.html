@@ -31,17 +31,39 @@
 
 <div class="page-hero reveal"><div class="breadcrumbs">Home / Post a project</div><h1 data-en="Post a new project" data-ru="Опубликовать новый проект" data-kk="Жаңа жобаны жариялау">Post a new project</h1><p class="lead" data-en="Describe what you need and create a clean project brief for developers." data-ru="Опишите, что вам нужно, и создайте понятный бриф для разработчиков." data-kk="Қажетіңізді сипаттап, әзірлеушілер үшін анық бриф жасаңыз.">Describe what you need and create a clean project brief for developers.</p></div>
 <div class="page-main">
-  <div class="form-card reveal">
+  <form class="form-card reveal" id="project-form">
     <div class="form-grid">
-      <div class="form-group"><label data-en="Project title" data-ru="Название проекта" data-kk="Жоба атауы">Project title</label><input type="text" placeholder="CRM dashboard for logistics startup"></div>
-      <div class="form-group"><label data-en="Budget" data-ru="Бюджет" data-kk="Бюджет">Budget</label><input type="text" placeholder="$2,000 - $5,000"></div>
-      <div class="form-group"><label data-en="Timeline" data-ru="Срок" data-kk="Мерзім">Timeline</label><input type="text" placeholder="4-6 weeks"></div>
-      <div class="form-group"><label data-en="Tech stack" data-ru="Технологический стек" data-kk="Технологиялық стек">Tech stack</label><input type="text" placeholder="React, Node.js, PostgreSQL"></div>
-      <div class="form-group full"><label data-en="Project description" data-ru="Описание проекта" data-kk="Жоба сипаттамасы">Project description</label><textarea placeholder="What should be built? What problem should it solve? What are the required features?"></textarea></div>
-      <div class="form-group full"><label data-en="Expected outcome" data-ru="Ожидаемый результат" data-kk="Күтілетін нәтиже">Expected outcome</label><textarea placeholder="Prototype, MVP, redesign, API integration, maintenance, etc."></textarea></div>
+      <div class="form-group">
+        <label for="projectTitle" data-en="Project title" data-ru="Название проекта" data-kk="Жоба атауы">Project title</label>
+        <input id="projectTitle" name="projectTitle" type="text" required data-placeholder-key="true" data-placeholder-en="CRM dashboard for logistics startup" data-placeholder-ru="CRM-дэшборд для логистического стартапа" data-placeholder-kk="Логистика стартапына арналған CRM дэшборды" placeholder="CRM dashboard for logistics startup">
+      </div>
+      <div class="form-group">
+        <label for="budget" data-en="Budget" data-ru="Бюджет" data-kk="Бюджет">Budget</label>
+        <input id="budget" name="budget" type="text" required data-placeholder-key="true" data-placeholder-en="$2,000 - $5,000" data-placeholder-ru="$2,000 - $5,000" data-placeholder-kk="$2,000 - $5,000" placeholder="$2,000 - $5,000">
+      </div>
+      <div class="form-group">
+        <label for="timeline" data-en="Timeline" data-ru="Срок" data-kk="Мерзім">Timeline</label>
+        <input id="timeline" name="timeline" type="text" required data-placeholder-key="true" data-placeholder-en="4-6 weeks" data-placeholder-ru="4-6 недель" data-placeholder-kk="4-6 апта" placeholder="4-6 weeks">
+      </div>
+      <div class="form-group">
+        <label for="techStack" data-en="Tech stack" data-ru="Технологический стек" data-kk="Технологиялық стек">Tech stack</label>
+        <input id="techStack" name="techStack" type="text" required data-placeholder-key="true" data-placeholder-en="React, Node.js, PostgreSQL" data-placeholder-ru="React, Node.js, PostgreSQL" data-placeholder-kk="React, Node.js, PostgreSQL" placeholder="React, Node.js, PostgreSQL">
+      </div>
+      <div class="form-group full">
+        <label for="projectDescription" data-en="Project description" data-ru="Описание проекта" data-kk="Жоба сипаттамасы">Project description</label>
+        <textarea id="projectDescription" name="projectDescription" required data-placeholder-key="true" data-placeholder-en="What should be built? What problem should it solve? What are the required features?" data-placeholder-ru="Что нужно создать? Какую проблему решить? Какие функции обязательны?" data-placeholder-kk="Не құру керек? Қандай мәселені шешуі тиіс? Қандай функциялар қажет?" placeholder="What should be built? What problem should it solve? What are the required features?"></textarea>
+      </div>
+      <div class="form-group full">
+        <label for="expectedOutcome" data-en="Expected outcome" data-ru="Ожидаемый результат" data-kk="Күтілетін нәтиже">Expected outcome</label>
+        <textarea id="expectedOutcome" name="expectedOutcome" required data-placeholder-key="true" data-placeholder-en="Prototype, MVP, redesign, API integration, maintenance, etc." data-placeholder-ru="Прототип, MVP, редизайн, интеграция API, поддержка и т.д." data-placeholder-kk="Прототип, MVP, редизайн, API интеграциясы, қолдау және т.б." placeholder="Prototype, MVP, redesign, API integration, maintenance, etc."></textarea>
+      </div>
     </div>
-    <div class="actions" style="justify-content:flex-start;"><a href="#" class="btn-primary" data-en="Publish project" data-ru="Опубликовать проект" data-kk="Жобаны жариялау">Publish project</a><a href="clients.html" class="btn-outline" data-en="Back to clients" data-ru="Назад к клиентам" data-kk="Клиенттер бетіне қайту">Back to clients</a></div>
-  </div>
+    <p class="form-feedback" id="project-form-feedback" aria-live="polite"></p>
+    <div class="actions" style="justify-content:flex-start;">
+      <button type="submit" class="btn-primary" id="project-form-submit" data-en="Publish project" data-ru="Опубликовать проект" data-kk="Жобаны жариялау">Publish project</button>
+      <a href="clients.html" class="btn-outline" data-en="Back to clients" data-ru="Назад к клиентам" data-kk="Клиенттер бетіне қайту">Back to clients</a>
+    </div>
+  </form>
 </div>
 
 <footer>
@@ -55,6 +77,6 @@
   </ul>
   <div class="footer-copy">© 2026 DevConnect KZ</div>
 </footer>
-<script src="script.js"></script>
+<script src="script.js?v=20260416"></script>
 </body>
 </html>
