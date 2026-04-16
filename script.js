@@ -258,8 +258,10 @@ function getDeveloperApplicationMessages(lang) {
   const messages = {
     en: {
       sending: 'Submitting your application...',
+      loading: 'Loading developer profiles...',
       success: 'Developer application submitted successfully.',
       error: 'Unable to submit the application right now.',
+      listError: 'Unable to load developer profiles right now.',
       networkError: 'Unable to reach the server right now.',
       fullNameRequired: 'Please enter your full name.',
       emailRequired: 'Please enter a valid email.',
@@ -267,12 +269,20 @@ function getDeveloperApplicationMessages(lang) {
       locationRequired: 'Please enter your location.',
       stackRequired: 'Please enter your main stack.',
       portfolioRequired: 'Portfolio / links must be at least 10 characters.',
-      experienceRequired: 'Experience summary must be at least 20 characters.'
+      experienceRequired: 'Experience summary must be at least 20 characters.',
+      stackLabel: 'Stack',
+      portfolioLabel: 'Portfolio',
+      experienceLabel: 'Experience',
+      appliedNow: 'Applied just now',
+      appliedOn: 'Applied',
+      noDevelopers: 'No developer profiles yet'
     },
     ru: {
       sending: 'Отправляем вашу заявку...',
+      loading: 'Загружаем профили разработчиков...',
       success: 'Заявка разработчика успешно отправлена.',
       error: 'Сейчас не удалось отправить заявку.',
+      listError: 'Сейчас не удалось загрузить профили разработчиков.',
       networkError: 'Сейчас не удается подключиться к серверу.',
       fullNameRequired: 'Пожалуйста, укажите ваше полное имя.',
       emailRequired: 'Пожалуйста, укажите корректный email.',
@@ -280,12 +290,20 @@ function getDeveloperApplicationMessages(lang) {
       locationRequired: 'Пожалуйста, укажите вашу локацию.',
       stackRequired: 'Пожалуйста, укажите основной стек.',
       portfolioRequired: 'Портфолио / ссылки должны содержать не менее 10 символов.',
-      experienceRequired: 'Описание опыта должно содержать не менее 20 символов.'
+      experienceRequired: 'Описание опыта должно содержать не менее 20 символов.',
+      stackLabel: 'Стек',
+      portfolioLabel: 'Портфолио',
+      experienceLabel: 'Опыт',
+      appliedNow: 'Заявка только что',
+      appliedOn: 'Заявка',
+      noDevelopers: 'Пока нет профилей разработчиков'
     },
     kk: {
       sending: 'Өтініміңіз жіберіліп жатыр...',
+      loading: 'Әзірлеуші профильдері жүктеліп жатыр...',
       success: 'Әзірлеуші өтінімі сәтті жіберілді.',
       error: 'Қазір өтінімді жіберу мүмкін болмады.',
+      listError: 'Қазір әзірлеуші профильдерін жүктеу мүмкін болмады.',
       networkError: 'Қазір серверге қосылу мүмкін болмады.',
       fullNameRequired: 'Толық аты-жөніңізді енгізіңіз.',
       emailRequired: 'Дұрыс email мекенжайын енгізіңіз.',
@@ -293,7 +311,13 @@ function getDeveloperApplicationMessages(lang) {
       locationRequired: 'Орналасуыңызды енгізіңіз.',
       stackRequired: 'Негізгі стекіңізді енгізіңіз.',
       portfolioRequired: 'Портфолио / сілтемелер кемінде 10 таңбадан тұруы керек.',
-      experienceRequired: 'Тәжірибе сипаттамасы кемінде 20 таңбадан тұруы керек.'
+      experienceRequired: 'Тәжірибе сипаттамасы кемінде 20 таңбадан тұруы керек.',
+      stackLabel: 'Стек',
+      portfolioLabel: 'Портфолио',
+      experienceLabel: 'Тәжірибе',
+      appliedNow: 'Жаңа ғана өтінім берді',
+      appliedOn: 'Өтінім',
+      noDevelopers: 'Әзірге әзірлеуші профильдері жоқ'
     }
   };
 
@@ -375,6 +399,19 @@ function formatPublishedDate(isoValue, lang, messages) {
   }
 }
 
+function formatDeveloperAppliedDate(isoValue, lang, messages) {
+  if (!isoValue) return messages.appliedNow;
+  try {
+    return new Intl.DateTimeFormat(lang, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(new Date(isoValue));
+  } catch (_error) {
+    return isoValue;
+  }
+}
+
 function escapeHtml(value) {
   return String(value || '')
     .replace(/&/g, '&amp;')
@@ -382,6 +419,58 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function getDeveloperInitials(fullName) {
+  const parts = String(fullName || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!parts.length) return 'DK';
+  return parts
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('');
+}
+
+function createDeveloperProfileCard(developer, lang) {
+  const messages = getDeveloperApplicationMessages(lang);
+  const article = document.createElement('article');
+  article.className = 'developer-profile-card';
+  const skills = String(developer.mainStack || '')
+    .split(',')
+    .map(skill => skill.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+
+  article.innerHTML = `
+    <div class="developer-profile-header">
+      <div class="developer-profile-avatar">${escapeHtml(getDeveloperInitials(developer.fullName))}</div>
+      <div class="developer-profile-title">
+        <h3>${escapeHtml(developer.fullName)}</h3>
+        <p>${escapeHtml(developer.role)} · ${escapeHtml(developer.location)}</p>
+      </div>
+    </div>
+    <div class="developer-profile-section">
+      <span class="developer-profile-label">${escapeHtml(messages.stackLabel)}</span>
+      <div class="developer-profile-skills">
+        ${skills.map(skill => `<span class="developer-profile-skill">${escapeHtml(skill)}</span>`).join('')}
+      </div>
+    </div>
+    <div class="developer-profile-section">
+      <span class="developer-profile-label">${escapeHtml(messages.portfolioLabel)}</span>
+      <p class="developer-profile-links">${escapeHtml(developer.portfolioLinks)}</p>
+    </div>
+    <div class="developer-profile-section">
+      <span class="developer-profile-label">${escapeHtml(messages.experienceLabel)}</span>
+      <p class="developer-profile-text">${escapeHtml(developer.experienceSummary)}</p>
+    </div>
+    <div class="developer-profile-footer">
+      <span>${escapeHtml(messages.appliedOn)}: ${escapeHtml(formatDeveloperAppliedDate(developer.createdAt, lang, messages))}</span>
+    </div>
+  `;
+  return article;
 }
 
 function createProjectCard(project, lang) {
@@ -402,6 +491,72 @@ function createProjectCard(project, lang) {
     </div>
   `;
   return article;
+}
+
+async function fetchDeveloperProfiles(apiBase) {
+  const response = await fetch(`${apiBase}/api/developer-applications`, {
+    headers: {
+      'Accept-Language': currentLang
+    }
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.message || getDeveloperApplicationMessages(currentLang).listError);
+  }
+  return result.developers || [];
+}
+
+function initDeveloperProfilesList() {
+  const grid = document.getElementById('developer-profiles-grid');
+  if (!grid) return;
+
+  const feedback = document.getElementById('developer-profiles-feedback');
+  const emptyState = document.getElementById('developer-profiles-empty-state');
+  const apiBases = getContactApiBases(grid);
+
+  function render(developers) {
+    const messages = getDeveloperApplicationMessages(currentLang);
+    grid.innerHTML = '';
+    developers.forEach(developer => {
+      grid.appendChild(createDeveloperProfileCard(developer, currentLang));
+    });
+    if (emptyState) emptyState.style.display = developers.length ? 'none' : 'grid';
+    if (!developers.length) {
+      setFeedbackMessage(feedback, '', messages.noDevelopers);
+    } else {
+      setFeedbackMessage(feedback, '', '');
+    }
+  }
+
+  (async () => {
+    const messages = getDeveloperApplicationMessages(currentLang);
+    setFeedbackMessage(feedback, 'loading', messages.loading);
+
+    try {
+      let developers = [];
+      let networkError = null;
+
+      for (const apiBase of apiBases) {
+        try {
+          developers = await fetchDeveloperProfiles(apiBase);
+          networkError = null;
+          break;
+        } catch (error) {
+          networkError = error;
+        }
+      }
+
+      if (networkError && !developers.length) {
+        throw networkError;
+      }
+
+      render(developers);
+    } catch (error) {
+      const message = error instanceof TypeError ? messages.networkError : (error.message || messages.listError);
+      setFeedbackMessage(feedback, 'error', message);
+      if (emptyState) emptyState.style.display = 'grid';
+    }
+  })();
 }
 
 function initContactForm() {
@@ -766,6 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initStats();
   initContactForm();
   initDeveloperApplicationForm();
+  initDeveloperProfilesList();
   initProjectForm();
   initProjectsList();
 });

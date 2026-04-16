@@ -20,6 +20,7 @@ function getMessages(lang) {
       portfolioRequired: 'Portfolio / links must be between 10 and 2000 characters.',
       experienceRequired: 'Experience summary must be between 20 and 3000 characters.',
       created: 'Developer application submitted successfully.',
+      listFailed: 'Unable to load developer profiles right now.',
       createFailed: 'Unable to submit the application right now.'
     },
     ru: {
@@ -32,6 +33,7 @@ function getMessages(lang) {
       portfolioRequired: 'Портфолио / ссылки должны содержать от 10 до 2000 символов.',
       experienceRequired: 'Описание опыта должно содержать от 20 до 3000 символов.',
       created: 'Заявка разработчика успешно отправлена.',
+      listFailed: 'Сейчас не удалось загрузить профили разработчиков.',
       createFailed: 'Сейчас не удалось отправить заявку.'
     },
     kk: {
@@ -44,6 +46,7 @@ function getMessages(lang) {
       portfolioRequired: 'Портфолио / сілтемелер 10 мен 2000 таңба аралығында болуы керек.',
       experienceRequired: 'Тәжірибе сипаттамасы 20 мен 3000 таңба аралығында болуы керек.',
       created: 'Әзірлеуші өтінімі сәтті жіберілді.',
+      listFailed: 'Қазір әзірлеуші профильдерін жүктеу мүмкін болмады.',
       createFailed: 'Қазір өтінімді жіберу мүмкін болмады.'
     }
   };
@@ -133,23 +136,49 @@ function validateDeveloperApplicationPayload(payload = {}, lang = 'en') {
   };
 }
 
+function mapDeveloperProfile(doc) {
+  const data = doc.data();
+
+  return {
+    id: doc.id,
+    fullName: data.fullName,
+    role: data.role,
+    location: data.location,
+    mainStack: data.mainStack,
+    portfolioLinks: data.portfolioLinks,
+    experienceSummary: data.experienceSummary,
+    status: data.status || 'new',
+    createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null
+  };
+}
+
 export default async function handler(req, res) {
   const lang = normalizeLanguage(req.headers['accept-language']);
   const messages = getMessages(lang);
 
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ success: false, message: messages.methodNotAllowed });
-  }
-
-  const { error, value } = validateDeveloperApplicationPayload(req.body, lang);
-  if (error) {
-    return res.status(400).json({ success: false, message: error });
   }
 
   try {
     const db = initFirebase();
     const collectionName = process.env.FIREBASE_DEVELOPER_APPLICATIONS_COLLECTION || 'developerApplications';
-    const docRef = await db.collection(collectionName).add({
+    const collection = db.collection(collectionName);
+
+    if (req.method === 'GET') {
+      const snapshot = await collection.orderBy('createdAt', 'desc').limit(24).get();
+      return res.status(200).json({
+        success: true,
+        developers: snapshot.docs.map(mapDeveloperProfile)
+      });
+    }
+
+    const { error, value } = validateDeveloperApplicationPayload(req.body, lang);
+    if (error) {
+      return res.status(400).json({ success: false, message: error });
+    }
+
+    const docRef = await collection.add({
       ...value,
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
@@ -161,6 +190,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Developer applications API error:', error);
-    return res.status(500).json({ success: false, message: messages.createFailed });
+    const message = req.method === 'GET' ? messages.listFailed : messages.createFailed;
+    return res.status(500).json({ success: false, message });
   }
 }
