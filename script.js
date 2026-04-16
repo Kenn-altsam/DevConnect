@@ -4,6 +4,31 @@ function normalizeLanguage(lang) {
 }
 
 let currentLang = normalizeLanguage(localStorage.getItem('language') || 'en');
+const ONBOARDING_SEEN_STORAGE_KEY = 'devconnectOnboardingSeen';
+
+function hasSeenOnboarding() {
+  try {
+    return localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) === 'true';
+  } catch (_error) {
+    return true;
+  }
+}
+
+function markOnboardingSeen() {
+  try {
+    localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, 'true');
+  } catch (_error) {
+    // Ignore storage failures so the site remains usable in private modes.
+  }
+}
+
+function initFirstVisitOnboarding() {
+  const currentPage = normalizePath(window.location.pathname);
+  if (currentPage !== 'index.html' || hasSeenOnboarding()) return;
+
+  markOnboardingSeen();
+  window.location.replace('onboarding.html');
+}
 
 function updateElementText(el, text) {
   if (!text) return;
@@ -927,6 +952,7 @@ function initProjectForm() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initFirstVisitOnboarding();
   initActiveNav();
   initLanguageSwitcher();
   initCursor();

@@ -3,6 +3,15 @@ const onboardingState = {
   lang: 'en',
   role: localStorage.getItem('onboardingRole') || 'client'
 };
+const ONBOARDING_SEEN_STORAGE_KEY = 'devconnectOnboardingSeen';
+
+function markOnboardingSeen() {
+  try {
+    localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, 'true');
+  } catch (_error) {
+    // Storage can be unavailable in some browser modes; navigation should still work.
+  }
+}
 
 function normalizeLanguage(lang) {
   if (lang === 'kz') return 'kk';
@@ -375,8 +384,14 @@ function initChoices() {
 
   if (skipBtn) {
     skipBtn.addEventListener('click', () => {
+      markOnboardingSeen();
       window.location.href = 'index.html';
     });
+  }
+
+  const finishBtn = document.getElementById('finishBtn');
+  if (finishBtn) {
+    finishBtn.addEventListener('click', markOnboardingSeen);
   }
 }
 
@@ -399,5 +414,6 @@ function restoreVisualSelections() {
 }
 
 initChoices();
+markOnboardingSeen();
 restoreVisualSelections();
 showStep(1);
