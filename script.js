@@ -41,6 +41,7 @@ function setLanguage(lang) {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
   });
   document.documentElement.lang = currentLang;
+  document.dispatchEvent(new CustomEvent('languagechange', { detail: { language: currentLang } }));
 }
 
 function normalizePath(path) {
@@ -513,6 +514,7 @@ function initDeveloperProfilesList() {
   const feedback = document.getElementById('developer-profiles-feedback');
   const emptyState = document.getElementById('developer-profiles-empty-state');
   const apiBases = getContactApiBases(grid);
+  let loadedDevelopers = null;
 
   function render(developers) {
     const messages = getDeveloperApplicationMessages(currentLang);
@@ -527,6 +529,10 @@ function initDeveloperProfilesList() {
       setFeedbackMessage(feedback, '', '');
     }
   }
+
+  document.addEventListener('languagechange', () => {
+    if (loadedDevelopers) render(loadedDevelopers);
+  });
 
   (async () => {
     const messages = getDeveloperApplicationMessages(currentLang);
@@ -550,7 +556,8 @@ function initDeveloperProfilesList() {
         throw networkError;
       }
 
-      render(developers);
+      loadedDevelopers = developers;
+      render(loadedDevelopers);
     } catch (error) {
       const message = error instanceof TypeError ? messages.networkError : (error.message || messages.listError);
       setFeedbackMessage(feedback, 'error', message);
@@ -766,6 +773,7 @@ function initProjectsList() {
   const feedback = document.getElementById('projects-list-feedback');
   const emptyState = document.getElementById('projects-empty-state');
   const apiBases = getContactApiBases(grid);
+  let loadedProjects = null;
 
   function render(projects) {
     const messages = getProjectMessages(currentLang);
@@ -780,6 +788,10 @@ function initProjectsList() {
       setFeedbackMessage(feedback, '', '');
     }
   }
+
+  document.addEventListener('languagechange', () => {
+    if (loadedProjects) render(loadedProjects);
+  });
 
   (async () => {
     const messages = getProjectMessages(currentLang);
@@ -804,7 +816,8 @@ function initProjectsList() {
       }
 
       clearPublishedProjectPreview();
-      render(projects);
+      loadedProjects = projects;
+      render(loadedProjects);
     } catch (error) {
       const message = error instanceof TypeError ? messages.networkError : (error.message || messages.listError);
       setFeedbackMessage(feedback, 'error', message);
