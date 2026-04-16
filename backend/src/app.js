@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const contactRoutes = require('./routes/contactRoutes');
+const developerApplicationRoutes = require('./routes/developerApplicationRoutes');
+const projectRoutes = require('./routes/projectRoutes');
 
 function getCorsOrigins() {
   const origins = (process.env.CORS_ORIGIN || '*')
@@ -24,6 +26,8 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api', contactRoutes);
+app.use('/api', developerApplicationRoutes);
+app.use('/api', projectRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

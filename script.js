@@ -254,6 +254,52 @@ function getProjectMessages(lang) {
   return messages[lang] || messages.en;
 }
 
+function getDeveloperApplicationMessages(lang) {
+  const messages = {
+    en: {
+      sending: 'Submitting your application...',
+      success: 'Developer application submitted successfully.',
+      error: 'Unable to submit the application right now.',
+      networkError: 'Unable to reach the server right now.',
+      fullNameRequired: 'Please enter your full name.',
+      emailRequired: 'Please enter a valid email.',
+      roleRequired: 'Please enter your role.',
+      locationRequired: 'Please enter your location.',
+      stackRequired: 'Please enter your main stack.',
+      portfolioRequired: 'Portfolio / links must be at least 10 characters.',
+      experienceRequired: 'Experience summary must be at least 20 characters.'
+    },
+    ru: {
+      sending: 'Отправляем вашу заявку...',
+      success: 'Заявка разработчика успешно отправлена.',
+      error: 'Сейчас не удалось отправить заявку.',
+      networkError: 'Сейчас не удается подключиться к серверу.',
+      fullNameRequired: 'Пожалуйста, укажите ваше полное имя.',
+      emailRequired: 'Пожалуйста, укажите корректный email.',
+      roleRequired: 'Пожалуйста, укажите вашу роль.',
+      locationRequired: 'Пожалуйста, укажите вашу локацию.',
+      stackRequired: 'Пожалуйста, укажите основной стек.',
+      portfolioRequired: 'Портфолио / ссылки должны содержать не менее 10 символов.',
+      experienceRequired: 'Описание опыта должно содержать не менее 20 символов.'
+    },
+    kk: {
+      sending: 'Өтініміңіз жіберіліп жатыр...',
+      success: 'Әзірлеуші өтінімі сәтті жіберілді.',
+      error: 'Қазір өтінімді жіберу мүмкін болмады.',
+      networkError: 'Қазір серверге қосылу мүмкін болмады.',
+      fullNameRequired: 'Толық аты-жөніңізді енгізіңіз.',
+      emailRequired: 'Дұрыс email мекенжайын енгізіңіз.',
+      roleRequired: 'Рөліңізді енгізіңіз.',
+      locationRequired: 'Орналасуыңызды енгізіңіз.',
+      stackRequired: 'Негізгі стекіңізді енгізіңіз.',
+      portfolioRequired: 'Портфолио / сілтемелер кемінде 10 таңбадан тұруы керек.',
+      experienceRequired: 'Тәжірибе сипаттамасы кемінде 20 таңбадан тұруы керек.'
+    }
+  };
+
+  return messages[lang] || messages.en;
+}
+
 function getContactApiBases(form) {
   const explicitBase = (form.dataset.apiBase || '').trim().replace(/\/$/, '');
   if (explicitBase) return [explicitBase];
@@ -312,23 +358,8 @@ function storePublishedProjectPreview(project) {
   localStorage.setItem(PUBLISHED_PROJECT_STORAGE_KEY, JSON.stringify(preview));
 }
 
-function mergeProjects(primary, preview) {
-  const seen = new Set();
-  const merged = [];
-
-  [...preview, ...primary].forEach(project => {
-    if (!project || !project.id || seen.has(project.id)) return;
-    seen.add(project.id);
-    merged.push(project);
-  });
-
-  merged.sort((a, b) => {
-    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : Number.MAX_SAFE_INTEGER;
-    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : Number.MAX_SAFE_INTEGER;
-    return bTime - aTime;
-  });
-
-  return merged;
+function clearPublishedProjectPreview() {
+  localStorage.removeItem(PUBLISHED_PROJECT_STORAGE_KEY);
 }
 
 function formatPublishedDate(isoValue, lang, messages) {
@@ -458,6 +489,108 @@ function initContactForm() {
   });
 }
 
+function initDeveloperApplicationForm() {
+  const form = document.getElementById('developer-application-form');
+  if (!form) return;
+
+  const feedback = document.getElementById('developer-application-feedback');
+  const submitButton = document.getElementById('developer-application-submit');
+  const apiBases = getContactApiBases(form);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const messages = getDeveloperApplicationMessages(currentLang);
+    const formData = new FormData(form);
+    const payload = {
+      fullName: String(formData.get('fullName') || '').trim(),
+      email: String(formData.get('email') || '').trim(),
+      role: String(formData.get('role') || '').trim(),
+      location: String(formData.get('location') || '').trim(),
+      mainStack: String(formData.get('mainStack') || '').trim(),
+      portfolioLinks: String(formData.get('portfolioLinks') || '').trim(),
+      experienceSummary: String(formData.get('experienceSummary') || '').trim()
+    };
+
+    if (!payload.fullName) {
+      setFeedbackMessage(feedback, 'error', messages.fullNameRequired);
+      return;
+    }
+
+    if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+      setFeedbackMessage(feedback, 'error', messages.emailRequired);
+      return;
+    }
+
+    if (!payload.role) {
+      setFeedbackMessage(feedback, 'error', messages.roleRequired);
+      return;
+    }
+
+    if (!payload.location) {
+      setFeedbackMessage(feedback, 'error', messages.locationRequired);
+      return;
+    }
+
+    if (!payload.mainStack) {
+      setFeedbackMessage(feedback, 'error', messages.stackRequired);
+      return;
+    }
+
+    if (payload.portfolioLinks.length < 10) {
+      setFeedbackMessage(feedback, 'error', messages.portfolioRequired);
+      return;
+    }
+
+    if (payload.experienceSummary.length < 20) {
+      setFeedbackMessage(feedback, 'error', messages.experienceRequired);
+      return;
+    }
+
+    setFeedbackMessage(feedback, 'loading', messages.sending);
+    submitButton.disabled = true;
+
+    try {
+      let response;
+      let networkError = null;
+
+      for (const apiBase of apiBases) {
+        try {
+          response = await fetch(`${apiBase}/api/developer-applications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept-Language': currentLang
+            },
+            body: JSON.stringify(payload)
+          });
+          networkError = null;
+          break;
+        } catch (error) {
+          networkError = error;
+        }
+      }
+
+      if (!response) {
+        throw networkError || new Error(messages.networkError);
+      }
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.message || messages.error);
+      }
+
+      form.reset();
+      setFeedbackMessage(feedback, 'success', result.message || messages.success);
+    } catch (error) {
+      const message = error instanceof TypeError ? messages.networkError : (error.message || messages.error);
+      setFeedbackMessage(feedback, 'error', message);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
+
 async function fetchProjects(apiBase) {
   const response = await fetch(`${apiBase}/api/projects`, {
     headers: {
@@ -515,7 +648,8 @@ function initProjectsList() {
         throw networkError;
       }
 
-      render(mergeProjects(projects, readPublishedProjectPreview()));
+      clearPublishedProjectPreview();
+      render(projects);
     } catch (error) {
       const message = error instanceof TypeError ? messages.networkError : (error.message || messages.listError);
       setFeedbackMessage(feedback, 'error', message);
@@ -631,6 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initReveal();
   initStats();
   initContactForm();
+  initDeveloperApplicationForm();
   initProjectForm();
   initProjectsList();
 });
